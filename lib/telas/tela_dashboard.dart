@@ -149,7 +149,7 @@ class TelaDashboardState extends State<TelaDashboard> {
                                 width: 56,
                                 height: 56,
                                 decoration: BoxDecoration(
-                                  color: jogo.corImagem.withOpacity(0.18),
+                                  color: jogo.corImagem.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: jogo.capa != null

@@ -27,7 +27,7 @@ class CardJogo extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: jogo.corImagem.withOpacity(0.2),
+                color: jogo.corImagem.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: jogo.capa != null

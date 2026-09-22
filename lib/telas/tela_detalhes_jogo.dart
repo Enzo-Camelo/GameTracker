@@ -68,7 +68,7 @@ class TelaDetalhesJogoState extends State<TelaDetalhesJogo> {
                 width: 280,
                 height: 280,
                 decoration: BoxDecoration(
-                  color: widget.jogo.corImagem.withOpacity(0.2),
+                  color: widget.jogo.corImagem.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: widget.jogo.capa != null

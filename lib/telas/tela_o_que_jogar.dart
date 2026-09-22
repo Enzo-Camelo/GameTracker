@@ -58,7 +58,7 @@ class TelaOQueJogarState extends State<TelaOQueJogar> {
                               width: 200,
                               height: 200,
                               decoration: BoxDecoration(
-                                color: jogoSorteado!.corImagem.withOpacity(0.2),
+                                color: jogoSorteado!.corImagem.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: jogoSorteado!.capa != null

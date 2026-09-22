@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../cores.dart';
 import '../telas/tela_dashboard.dart';
 import '../telas/tela_lista_jogos.dart';
 import '../telas/tela_estatisticas.dart';
