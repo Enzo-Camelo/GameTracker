@@ -1,0 +1,7 @@
+# Normaliza finais de linha: evita CRLF do Windows em arquivos que rodam no Linux dos runners.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.jar binary

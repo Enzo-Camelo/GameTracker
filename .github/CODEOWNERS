@@ -1,0 +1,10 @@
+# Revisores automáticos por área (PGC 2 e 5.2).
+# Mudanças em pipelines, dependências e configuração são de maior risco:
+# o Desenvolvedor Líder é sempre chamado para revisar.
+
+/.github/        @Enzo-Camelo
+/docs/           @Enzo-Camelo
+/pubspec.yaml    @Enzo-Camelo
+/pubspec.lock    @Enzo-Camelo
+/android/        @Enzo-Camelo
+/ios/            @Enzo-Camelo
