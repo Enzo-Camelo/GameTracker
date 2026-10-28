@@ -1,0 +1,31 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+!android/*.iml
+coverage/
+
+# Variáveis de ambiente locais — NUNCA versionar segredos (PGC 4.1)
+.env
+.env.*
+!.env.example
+
+# Chaves e assinatura de apps
+*.jks
+*.keystore
+key.properties
+google-services.json
+GoogleService-Info.plist
+
+# Sistema operacional / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log
