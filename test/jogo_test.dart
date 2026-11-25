@@ -56,4 +56,32 @@ void main() {
     expect(jogo.horasJogadas, 30);
     expect(jogo.avaliacao, 9);
   });
+
+  group('horas jogadas não podem ser negativas', () {
+    Jogo criarJogo(double horas) => Jogo(
+          nome: 'Stardew Valley',
+          imagem: Icons.agriculture,
+          corImagem: Colors.green,
+          genero: 'Simulação',
+          plataforma: 'PC',
+          descricao: 'Descrição do jogo.',
+          horasJogadas: horas,
+          avaliacao: 8,
+        );
+
+    test('recusa criar um jogo com horas negativas', () {
+      expect(() => criarJogo(-1), throwsArgumentError);
+    });
+
+    test('recusa atualizar para horas negativas e mantém o valor anterior', () {
+      final jogo = criarJogo(12);
+
+      expect(() => jogo.horasJogadas = -0.5, throwsArgumentError);
+      expect(jogo.horasJogadas, 12);
+    });
+
+    test('aceita zero horas (jogo ainda não iniciado)', () {
+      expect(criarJogo(0).horasJogadas, 0);
+    });
+  });
 }
