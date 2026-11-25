@@ -1,0 +1,52 @@
+name: Rollback
+
+# PGC 6.4: volta produção para uma baseline já publicada (tag vX.Y.Z),
+# sem alterar o histórico da main. Exige aprovação no Environment production.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag da Release a reimplantar (ex.: v1.0.0)'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: producao
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ inputs.tag }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - name: Validar a tag informada
+        run: |
+          if ! echo "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Tag inválida: $TAG"; exit 1
+          fi
+          gh release view "$TAG" --json tagName,publishedAt
+
+      - name: Reimplantar o artefato da baseline
+        run: |
+          gh release download "$TAG" --pattern '*.apk' --dir artefato
+          ls -l artefato
+
+      - name: Marcar a Release como versão oficial (Latest)
+        run: gh release edit "$TAG" --latest
+
+      - name: Registrar o rollback
+        run: |
+          {
+            echo "### Produção agora em $TAG"
+            echo "- Executado por: @$GITHUB_ACTOR"
+            echo "- Data (UTC): $(date -u '+%Y-%m-%d %H:%M:%S')"
+            echo "- A main não foi alterada (rollback de baseline, não git revert)."
+          } >> "$GITHUB_STEP_SUMMARY"

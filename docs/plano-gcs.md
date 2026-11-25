@@ -32,8 +32,8 @@ gratuito só funcionam em repositório público) e a conferência pelo professor
 
 | Environment | Configuração |
 |---|---|
-| `staging` | deploy automático após merge na `main`; somente branches protegidas |
-| `production` | **Required reviewers: Enzo-Camelo**; somente branches protegidas |
+| `staging` | deploy automático após merge `feat`/`fix` na `main` (`cd.yml`); somente branches protegidas |
+| `production` | **Required reviewers: Enzo-Camelo**; somente branches protegidas; usado pelo `cd.yml` e pelo `rollback.yml` |
 
 ### 3.3 Branching e merge
 - Trunk-based: `main` é a única branch de longa vida e está sempre protegida.
@@ -66,7 +66,8 @@ Secrets no pipeline. Se um segredo vazar, troque-o na origem (o histórico o pre
 - Commits e títulos de PR em Conventional Commits: `tipo(escopo): descrição`
   (`feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`).
 - Versionamento SemVer (`version` no `pubspec.yaml`): `feat` → MINOR, `fix` → PATCH, `!` → MAJOR.
-- Baselines: tags `vX.Y.Z` (Aula 3).
+- Baselines: tags `vX.Y.Z` criadas pelo `cd.yml`. A tag é a fonte da versão: o
+  `version` do `pubspec.yaml` fica como base e o build recebe `--build-name` da tag.
 
 ## 5. Integração Contínua
 
@@ -76,11 +77,20 @@ Cada PR deve ser pequeno, tratar de um assunto, ter testes e ser revisado via CO
 Tornar o check do CI obrigatório na proteção da `main` e validar o título do PR são entregas
 da Aula 2.
 
-## 6. Entrega Contínua (Aula 3)
+## 6. Entrega Contínua
 
-`release.yml` gera o APK de release como artefato a cada merge na `main`. A promoção
-staging → production, com aprovação no Environment `production`, tag e Release, será
-implementada na Aula 3. Rollback: reexecutar o release da tag anterior.
+### 6.1 Pipeline (`.github/workflows/cd.yml`)
+A cada push na `main` (merge por squash), o job `versao` lê o título do commit:
+`feat` → MINOR, `fix` → PATCH, `tipo!:` → MAJOR; outros tipos não geram baseline.
+Em seguida: `staging` (testes + APK de release como artefato) → `production`
+(**aprovação obrigatória** de @Enzo-Camelo) → tag `vX.Y.Z` no commit da `main` e Release
+com o APK, marcada como *Latest*. O `workflow_dispatch` existe só para a baseline inicial.
+
+### 6.2 Rollback (`.github/workflows/rollback.yml`)
+Actions → Rollback → Run workflow, informando a tag. Também exige aprovação em
+`production`; reimplanta o APK daquela Release e a marca como *Latest*. Não altera a `main`:
+a correção do defeito segue o fluxo normal (Issue → `fix/...` → PR → nova baseline PATCH).
+Todo rollback é registrado numa Issue de incidente (seção 8).
 
 ## 7. Rastreabilidade
 
@@ -93,6 +103,8 @@ título padronizado; a aprovação fica registrada no PR.
 - **Alto risco (CCM):** dados pessoais (LGPD), assinatura/`applicationId` do app, hotfix
   direto em produção. Abrir Issue com o template "Mudança de alto risco" contendo plano de
   rollback; a decisão do CCM é registrada nos comentários.
+- **Incidente em produção:** rollback pelo `rollback.yml` (seção 6.2) e Issue de incidente
+  com defeito, versão afetada, tag de destino, quem aprovou e plano de correção da `main`.
 
 ## 9. Dependências
 

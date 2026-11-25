@@ -1,0 +1,129 @@
+name: CD
+
+# Entrega contínua (PGC 6 e 9): cada merge na main com `feat`, `fix` ou `!`
+# gera uma nova baseline (tag vX.Y.Z + Release). Outros tipos (docs, ci, chore...)
+# não geram versão. O workflow_dispatch serve só para criar a baseline inicial.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      versao:
+        description: 'Versão da baseline (ex.: 1.0.0), sem o "v"'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: producao
+  cancel-in-progress: false
+
+jobs:
+  versao:
+    runs-on: ubuntu-latest
+    outputs:
+      liberar: ${{ steps.calc.outputs.liberar }}
+      versao: ${{ steps.calc.outputs.versao }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calcular próxima versão (SemVer a partir do Conventional Commit)
+        id: calc
+        env:
+          VERSAO_MANUAL: ${{ inputs.versao }}
+        run: |
+          if [ -n "$VERSAO_MANUAL" ]; then
+            if ! echo "$VERSAO_MANUAL" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "::error::Versão inválida: $VERSAO_MANUAL"; exit 1
+            fi
+            if git rev-parse -q --verify "refs/tags/v$VERSAO_MANUAL" >/dev/null; then
+              echo "::error::A tag v$VERSAO_MANUAL já existe"; exit 1
+            fi
+            echo "liberar=true" >> "$GITHUB_OUTPUT"
+            echo "versao=$VERSAO_MANUAL" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          titulo=$(git log -1 --format=%s)
+          ultima=$(git tag -l 'v*' --sort=-v:refname | head -1)
+          ultima=${ultima#v}
+          ultima=${ultima:-0.0.0}
+          IFS=. read -r maj min pat <<< "$ultima"
+
+          if echo "$titulo" | grep -Eq '^[a-z]+(\([^)]*\))?!:'; then
+            nova="$((maj + 1)).0.0"
+          elif echo "$titulo" | grep -Eq '^feat(\([^)]*\))?:'; then
+            nova="$maj.$((min + 1)).0"
+          elif echo "$titulo" | grep -Eq '^fix(\([^)]*\))?:'; then
+            nova="$maj.$min.$((pat + 1))"
+          else
+            echo "Commit '$titulo' não é feat/fix: sem nova baseline."
+            echo "liberar=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Commit '$titulo': v$ultima -> v$nova"
+          echo "liberar=true" >> "$GITHUB_OUTPUT"
+          echo "versao=$nova" >> "$GITHUB_OUTPUT"
+
+  staging:
+    needs: versao
+    if: needs.versao.outputs.liberar == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: 'stable'
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter test
+
+      - name: Build do APK de release
+        run: >
+          flutter build apk --release
+          --build-name=${{ needs.versao.outputs.versao }}
+          --build-number=${{ github.run_number }}
+
+      - name: Publicar APK em staging (artefato)
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-tracker-v${{ needs.versao.outputs.versao }}
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  production:
+    needs: [versao, staging]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.versao.outputs.versao }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: game-tracker-v${{ needs.versao.outputs.versao }}
+
+      - name: Criar tag e Release (baseline)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: v${{ needs.versao.outputs.versao }}
+        run: |
+          mv app-release.apk "game-tracker-$TAG.apk"
+          gh release create "$TAG" "game-tracker-$TAG.apk" \
+            --target "$GITHUB_SHA" \
+            --title "$TAG" \
+            --generate-notes \
+            --latest
+          {
+            echo "### Baseline $TAG publicada em produção"
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Disparado por: @$GITHUB_ACTOR"
+            echo "- Data (UTC): $(date -u '+%Y-%m-%d %H:%M:%S')"
+          } >> "$GITHUB_STEP_SUMMARY"
