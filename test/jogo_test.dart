@@ -84,4 +84,38 @@ void main() {
       expect(criarJogo(0).horasJogadas, 0);
     });
   });
+
+  group('avaliação deve estar entre 0 e 10', () {
+    Jogo criarJogo(double nota) => Jogo(
+          nome: 'Zelda',
+          imagem: Icons.landscape,
+          corImagem: Colors.teal,
+          genero: 'Aventura',
+          plataforma: 'Switch',
+          descricao: 'Descrição do jogo.',
+          horasJogadas: 20,
+          avaliacao: nota,
+        );
+
+    test('recusa criar um jogo com avaliação abaixo de 0', () {
+      expect(() => criarJogo(-0.5), throwsArgumentError);
+    });
+
+    test('recusa criar um jogo com avaliação acima de 10', () {
+      expect(() => criarJogo(10.5), throwsArgumentError);
+    });
+
+    test('recusa atualizar para fora de 0–10 e mantém a nota anterior', () {
+      final jogo = criarJogo(7.5);
+
+      expect(() => jogo.avaliacao = 11, throwsArgumentError);
+      expect(() => jogo.avaliacao = -1, throwsArgumentError);
+      expect(jogo.avaliacao, 7.5);
+    });
+
+    test('aceita os limites 0 e 10', () {
+      expect(criarJogo(0).avaliacao, 0);
+      expect(criarJogo(10).avaliacao, 10);
+    });
+  });
 }
