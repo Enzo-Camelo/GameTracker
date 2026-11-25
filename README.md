@@ -17,7 +17,7 @@ repositório [lzcamargo/ongconecta](https://github.com/lzcamargo/ongconecta).
 | `assets/` | imagens dos jogos |
 | `android/ ios/ web/ linux/ macos/ windows/` | projetos de plataforma gerados pelo Flutter |
 | `pubspec.yaml` / `pubspec.lock` | dependências e versões exatas (lockfile versionado) |
-| `.github/workflows/` | pipelines: `ci.yml` (PR e main), `release.yml` (build do APK na main) |
+| `.github/workflows/` | pipelines: `ci.yml` (PR e main), `cd.yml` (baseline + Release na main), `rollback.yml` (volta para uma tag) |
 | `.github/` | `CODEOWNERS`, template de PR, templates de Issue, `dependabot.yml` |
 | `docs/` | [plano de GCS](docs/plano-gcs.md), [roteiro de configuração no GitHub](docs/roteiro-github.md), [evidências](docs/evidencias/README.md) |
 | `.env.example` | nomes de variáveis de ambiente (sem valores reais) |
@@ -57,8 +57,9 @@ Detalhes em [docs/plano-gcs.md](docs/plano-gcs.md).
 | `staging` | merge na `main` | automática |
 | `production` | após staging | **revisor obrigatório: @Enzo-Camelo** |
 
-Os Environments existem no GitHub; o deploy real entra na Aula 3 (hoje o `release.yml`
-gera o APK como artefato).
+O `cd.yml` gera o APK em `staging` e, após aprovação em `production`, cria a tag
+`vX.Y.Z` e a Release (só em merges `feat`, `fix` ou `!`). O `rollback.yml`
+(Actions → Rollback → Run workflow) volta produção para uma tag anterior, também com aprovação.
 
 ## Equipe
 

@@ -28,7 +28,7 @@ Executado em 2026-10-27. Depois do teste: `git reset --hard origin/main`.
 ## 2. Par de revisão
 
 - Usuário do par: `@camelo-dev`, permissão *Write* (Settings → Collaborators)
-- Convite aceito em: pendente (aguardando aceite de @camelo-dev)
+- Convite aceito: sim — em 2026-11-25 `@camelo-dev` consta em Settings → Collaborators com papel *Write*
 
 ## 3. Prints opcionais
 
