@@ -8,8 +8,11 @@ class Jogo {
   String plataforma;
   String descricao;
   double _horasJogadas;
-  double avaliacao;
+  double _avaliacao;
   String? capa;
+
+  static const double avaliacaoMinima = 0;
+  static const double avaliacaoMaxima = 10;
 
   Jogo({
     required this.nome,
@@ -19,9 +22,25 @@ class Jogo {
     required this.plataforma,
     required this.descricao,
     required double horasJogadas,
-    required this.avaliacao,
+    required double avaliacao,
     this.capa,
-  }) : _horasJogadas = _validarHoras(horasJogadas);
+  })  : _horasJogadas = _validarHoras(horasJogadas),
+        _avaliacao = _validarAvaliacao(avaliacao);
+
+  double get avaliacao => _avaliacao;
+
+  set avaliacao(double valor) => _avaliacao = _validarAvaliacao(valor);
+
+  static double _validarAvaliacao(double valor) {
+    if (valor < avaliacaoMinima || valor > avaliacaoMaxima) {
+      throw ArgumentError.value(
+        valor,
+        'avaliacao',
+        'deve estar entre $avaliacaoMinima e $avaliacaoMaxima',
+      );
+    }
+    return valor;
+  }
 
   double get horasJogadas => _horasJogadas;
 
